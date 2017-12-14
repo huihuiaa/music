@@ -1,0 +1,26 @@
+<div>
+    <style>
+        .discover-nav{
+            width: 100%;
+            height: .8rem;
+            display: flex;
+        }
+        .discover-item{
+            flex: 1;
+            line-height: 0.76rem; 
+            text-align: center;
+        }
+        .discover-active{
+            border-bottom:.04rem solid #cd3d3d;
+            color: #cd3d3d;
+        }
+    </style>
+
+    <div class="discover-nav">
+        <div class="discover-item" ui-sref="discover.gexing" ui-sref-active="discover-active">个性推荐</div>
+        <div class="discover-item" ui-sref="discover.gedan" ui-sref-active="discover-active">歌单</div>
+        <div class="discover-item" ui-sref="discover.diantai" ui-sref-active="discover-active">主播电台</div>
+        <div class="discover-item" ui-sref="discover.paihang" ui-sref-active="discover-active">排行榜</div>
+    </div>
+    <ui-view></ui-view>
+</div>

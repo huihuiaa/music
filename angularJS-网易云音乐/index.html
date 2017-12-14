@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html ng-app="app">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=.5, maximum-scale=.5, minimum-scale=.5, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./css/iconfont.css">
+
+    <link rel="stylesheet" href="./css/ionic.css">
+    <title>Document</title>
+    <script>
+        document.documentElement.style.fontSize = window.screen.width / 3.6 + 'px';
+        window.onresize = function () {
+            document.documentElement.style.fontSize = window.screen.width / 3.6 + 'px';
+        }
+    </script>
+    <style>
+        html {
+            padding: 0;
+            margin: 0
+        }
+
+        body {
+            padding: 0;
+            margin: 0;
+            font-size: .24rem;
+        }
+
+        dl,
+        dt,
+        dd,
+        img,
+        p {
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            width: 100%;
+            height: 1.1rem;
+            display: flex;
+            background: #cd3d3d;
+        }
+
+        .gap {
+            height: 100%;
+            flex: 1;
+        }
+
+        .leftBar,
+        .rightBar {
+            line-height: 1.1rem;
+            flex: 1.53;
+            color: white;
+            text-align: center;
+            font-size: .5rem;
+        }
+
+        .myitem {
+            line-height: 1.1rem;
+            flex: 1.646;
+            color: #df8f8e;
+            text-align: center;
+            font-size: .5rem;
+        }
+
+        .active {
+            color: white;
+        }
+
+        .footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: .98rem;
+            display: flex;
+        }
+
+        .footer-left {
+            flex: 7.5;
+            height: .98rem;
+        }
+
+        .footer-right {
+            flex: 2.5;
+            height: .98rem;
+            display: flex;
+        }
+
+        .dl {
+            display: flex;
+        }
+
+        .dt {
+            flex: 2;
+            padding: .09rem 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dd {
+            flex: 8;
+        }
+
+        .dt img {
+            width: .8rem;
+            height: .8rem;
+        }
+
+        .songName {
+            line-height: .62rem;
+            font-size: .3rem;
+            color: #333;
+        }
+
+        .singerName {
+            height: .36rem;
+            color: #888;
+            font-size: .18rem;
+        }
+
+        .songIcon {
+            width: .8rem;
+            height: .8rem;
+        }
+
+        .playOrStop {
+            flex: 5.5556;
+            line-height: .98rem;
+            text-align: center;
+            color: #cd3d3d;
+            font-size: .62rem;
+        }
+
+        .nextSong {
+            flex: 4.4444;
+            line-height: .98rem;
+            text-align: center;
+            color: #cd3d3d;
+            font-size: .62rem;
+        }
+
+        .fixHeight {
+            line-height: .915rem!important;
+            font-size: .65rem;
+        }
+
+        .progressBox {
+            position: fixed;
+            z-index: 99;
+            height: .1rem;
+            width: 100%;
+            bottom: .98rem;
+            left: 0;
+        }
+
+        .progressBar {
+            background-color: #cd3d3d;
+            height: .02rem;
+            margin-top: .04rem;
+            width: 0;
+        }
+        .modeBtn{
+            width: 2rem;
+            line-height: .6rem;
+            text-align: center;
+            color: #cd3d3d;
+        }
+        .modeItem{
+            width: 2rem;
+            line-height: .6rem;
+            text-align: center;
+            color: black;            
+        }
+        .remaining{
+            position: fixed;
+            bottom: 1.08rem;
+            left: 0;
+            color: black
+        }
+        .allTime{
+            position: fixed;
+            bottom: 1.08rem;
+            right: 0;
+            color: black;
+        }
+    </style>
+</head>
+
+<body ng-controller="main">
+
+    <div class="header">
+        <div class="leftBar iconfont icon-lisimoshicaidandaohang"></div>
+        <div class="gap "></div>
+        <div class="myitem iconfont icon-wangyiyunyinlezizhi-copy" ui-sref="discover" ui-sref-active="active"></div>
+        <div class="myitem iconfont icon-yinle1" ui-sref="music" ui-sref-active="active"></div>
+        <div class="myitem iconfont icon-yonghuzu" ui-sref="friends" ui-sref-active="active"></div>
+        <div class="gap "></div>
+        <div class="rightBar iconfont icon-sousuo_sousuo"></div>
+    </div>
+    <ui-view></ui-view>
+
+    <div class="modeBox">
+        <div class="modeBtn" ng-touchend="changeMode()">{{mode}}</div>
+        <div ng-show="modeIsOpen" ng-touchend="setMode($event)" class="listBox">
+            <div class="modeItem">顺序播放</div>
+            <div class="modeItem">单曲循环</div>
+            <div class="modeItem">列表循环</div>
+            <div class="modeItem">随机播放</div>
+            <div class="modeItem">单曲播放</div>
+        </div>
+    </div>
+
+    <div class="remaining">{{currentTime| time }}</div><div class="allTime">{{duration| time }}</div>
+    <div class="progressBox" ng-touchstart="start($event)" ng-touchmove="move($event)" ng-touchend="end($event)">
+        <div class="progressBar">
+
+        </div>
+    </div>
+    <div class="footer">
+        <div class="footer-left">
+            <dl class="dl">
+                <dt class="dt">
+                    <img class="songIcon" ng-src="{{songIcon}}" alt="">
+                </dt>
+                <dd class="dd">
+                    <p class="songName">{{songName}}</p>
+                    <p class="singerName">{{singerName}}</p>
+                </dd>
+            </dl>
+        </div>
+
+        <div class="footer-right">
+            <div class="playOrStop iconfont" ng-class="[playClass,fixC]" ng-touchend="playOrStop()">
+
+            </div>
+            <div class="nextSong iconfont icon-quanjuxiayiqu" ng-touchend="nextSong()">
+
+            </div>
+        </div>
+        <audio style="display:none" id="player"></audio>
+    </div>
+</body>
+
+<script src="./js/angular.min.js"></script>
+<script src="./js/angular-ui-router.js"></script>
+<script src="./js/ionic.bundle.js"></script>
+<script src="./js/ionic.js"></script>
+<script src="./js/ionic-angular.js"></script>
+
+</html>
+<script>
+        angular.module('app', ['ui.router', 'ionic'])
+            .config(['$stateProvider', '$urlRouterProvider', function ($stateProvider, $urlRouterProvider) {
+                $urlRouterProvider.otherwise('/discover')
+                $urlRouterProvider.when('/discover', '/discover/gexing')
+                $stateProvider.state('discover', {
+                    url: '/discover',
+                    templateUrl: './template/discover.html',
+                    controller: [function () {
+
+                    }]
+                })
+                    .state('music', {
+                        url: '/music',
+                        templateUrl: './template/music.html',
+                        controller: [function () {
+
+                        }]
+                    })
+                    .state('friends', {
+                        url: '/friends',
+                        templateUrl: './template/friends.html',
+                        controller: [function () {
+
+                        }]
+                    })
+                    .state('discover.gexing', {
+                        url: '/gexing',
+                        templateUrl: './template/discover/gexing.html',
+                        controller: ['$scope', '$ionicSlideBoxDelegate', function ($scope, $ionicSlideBoxDelegate) {
+                            $scope.pathArr = ['./img/banner1.jpg', './img/banner2.jpg', './img/banner3.jpg', './img/banner4.jpg']
+                            $scope.goTo = function (index) {
+                                $ionicSlideBoxDelegate.slide(index, 2000)
+                            }
+                        }]
+                    })
+                    .state('discover.gedan', {
+                        url: '/gedan',
+                        templateUrl: './template/discover/gedan.html',
+                        controller: [function () {
+
+                        }]
+                    })
+                    .state('discover.diantai', {
+                        url: '/diantai',
+                        templateUrl: './template/discover/diantai.html',
+                        controller: [function () {
+
+                        }]
+                    })
+                    .state('discover.paihang', {
+                        url: '/paihang',
+                        templateUrl: './template/discover/paihang.html',
+                        controller: [function () {
+
+                        }]
+                    })
+            }])
+            .factory('$style', function () {
+
+                function fn(dom, attributeName) {
+
+                    var value = window.getComputedStyle ? window.getComputedStyle(dom, null)[attributeName] : dom.currentStyle[attributeName];
+
+                    return value
+                }
+
+                return fn
+            })
+            .service('$player', ['$interval', '$style','$timeout', function ($interval, $style,$timeout) {
+                var _this = this;
+                this.timer;
+                this.progressBar;
+                this.$scope;
+                this.currentSongIndex;
+                this.mode;
+                this.setProgressBar = function (dom) {
+                    _this.progressBar = dom;
+                }
+                this.setTimer = function (id) {
+                    this.timer = id;
+                }
+                this.clearTimer = function () {
+                    $interval.cancel(_this.timer);
+                    this.timer = null;
+                }
+                this.play = function () {
+                    player.play();
+                    if(player.duration&&player.duration.toString().indexOf('NaN')){
+                        _this.$scope.duration = player.duration;
+                    }
+                    _this.$scope.playClass = 'icon-stop';
+                    _this.$scope.fixC = '';
+                    if (!_this.timer) {
+                        _this.setTimer(_this.updataProgressBar())
+                    }
+                }
+                this.pause = function () {
+                    player.pause();
+                    _this.$scope.playClass = 'icon-bofang';
+                    _this.$scope.fixC = 'fixHeight';
+                    _this.clearTimer();
+
+                }
+                this.updataProgressBar = function () {
+                    return $interval(function () {
+                        var progress = _this.getProgress()
+                        _this.progressBar.style.width = progress * window.screen.width * 2 + 'px';
+                        _this.$scope.currentTime = player.currentTime;
+                        if (progress == 1) {
+                            _this.clearTimer();
+                            _this.$scope.playClass = 'icon-bofang'
+                            _this.progressBar.style.width = 0;
+                            _this.$scope.currentTime = 0;
+                            _this.playWithMode();
+                        }
+                    }, 1000/6)
+                }
+                this.getProgress = function () {
+                    return player.currentTime / player.duration;
+                }
+                this.setPlayerInfo = function (index) {
+                    _this.currentSongIndex = index;
+                    player.src = _this.$scope.musicArr[index].url;
+                    _this.$scope.songSrc = _this.$scope.musicArr[index].url;
+                    _this.$scope.songIcon = _this.$scope.musicArr[index].songImg;
+                    _this.$scope.songName = _this.$scope.musicArr[index].songName;
+                    _this.$scope.singerName = _this.$scope.musicArr[index].singerName;
+                    
+                    $timeout(function(){
+                        _this.$scope.duration = player.duration;
+                    },1000)
+                }
+                this.nextSong = function(){
+                    var index = ++_this.currentSongIndex % _this.$scope.musicArr.length;
+                        _this.setPlayerInfo(index);
+                        _this.play()
+                }
+                this.playWithMode = function (next) {
+                    switch (_this.mode) {
+                        case '顺序播放':
+                            if(next){
+                                _this.nextSong();
+                                return;
+                            }
+                            if (_this.currentSongIndex < _this.$scope.musicArr.length - 1) {
+                                _this.nextSong();
+                            }
+                            break;
+                        case '单曲循环':
+                            _this.play();
+                            break;
+                        case '列表循环':
+                            _this.nextSong();
+                            break;
+                        case '随机播放':
+                            var notOk = true,
+                                index;
+
+                            do {
+                                index = Math.floor(Math.random() * _this.$scope.musicArr.length);
+                                if (index != _this.currentSongIndex) {
+                                    notOk = false;
+                                }
+                            } while (notOk)
+
+                            _this.setPlayerInfo(index);
+
+                            _this.play();
+
+                            break;
+                        default:
+                            if(next){
+                                _this.nextSong();                               
+                            }
+                            break;
+                    }
+                }
+            }])
+            .controller('main', ['$scope', '$player', '$style', function ($scope, $player, $style) {
+                $scope.mode = '单曲播放';
+                $player.mode = $scope.mode;
+                $scope.$watch('mode',function(newVal){
+                    if(newVal){
+                        $player.mode = newVal;
+                    }
+                })
+                $player.$scope = $scope;
+                $player.setProgressBar(document.querySelector('.progressBar'))
+                $scope.musicArr = [{
+                    url: './mp3/周杰伦 - 听妈妈的话.m4a',
+                    songName: '听妈妈的话',
+                    singerName: '周杰伦',
+                    songImg: './img/icon_01.png'
+                }, {
+                    url: './mp3/周杰伦 - 告白气球.m4a',
+                    songName: '告白气球',
+                    singerName: '周杰伦',
+                    songImg: './img/icon_02.png'
+                }, {
+                    url: './mp3/周杰伦 - 爱我别走.m4a',
+                    songName: '爱我别走',
+                    singerName: '周杰伦',
+                    songImg: './img/icon_03.png'
+                }, {
+                    url: './mp3/王力宏 - 你不知道的事.mp3',
+                    songName: '你不知道的事',
+                    singerName: '王力宏',
+                    songImg: './img/icon_04.png'
+                }];
+                $player.setPlayerInfo(0);
+                $scope.playClass = 'icon-bofang';
+                $scope.playOrStop = function () {
+                    if ($scope.playClass == 'icon-bofang') {
+                        $player.play();
+                    } else {
+                        $player.pause();
+                    }
+                }
+                $scope.start = function (event) {
+                    console.log('touchSatrt')
+                    $player.clearTimer();
+                    $player.progressOldWidth = $style($player.progressBar, 'width');
+                    $player.progressBar.style.width = event.touches[0].pageX + 'px';
+                }
+                $scope.move = function (event) {
+                    console.log('touchMove', )
+                    $player.progressBar.style.width = event.touches[0].pageX + 'px';
+                }
+                $scope.end = function (event, different) {
+                    console.log('touchEnd', different)
+                    if (different) {
+                        $player.progressBar.style.width = $player.progressOldWidth;
+                        if (!player.paused) {
+                            $player.setTimer($player.updataProgressBar());
+                        }
+                    } else {
+                        player.currentTime = parseInt($style($player.progressBar, 'width')) / (window.screen.width * 2) * player.duration;
+                        $scope.playClass = 'icon-bofang'
+                        $scope.playOrStop();
+                    }
+
+                }
+                $scope.nextSong = function () {
+                    $player.playWithMode('next');
+                }
+                $scope.changeMode = function(){
+                    $scope.modeIsOpen = !$scope.modeIsOpen;
+                }   
+                $scope.setMode = function(event){
+                    console.log(event.target.innerText);
+                    if(event.target.className.indexOf('listBox')==-1){
+                        $scope.mode = event.target.innerText;
+                    }
+                    $scope.modeIsOpen = false;
+                }
+            }])
+            .directive("ngTouchstart", function () {
+                return {
+                    controller: ["$scope", "$element", function ($scope, $element) {
+                        $element.bind("touchstart", onTouchStart);
+                        function onTouchStart(event) {
+                            $scope.$event = event;
+                            $scope.$$firstTarget = $scope.$$lastTarget = event.target;
+                            var method = $element.attr("ng-touchstart");
+                            $scope.$apply(method);
+                        }
+                    }]
+                }
+            })
+            .directive("ngTouchmove", function () {
+                return {
+                    controller: ["$scope", "$element", function ($scope, $element) {
+
+                        $element.bind("touchstart", onTouchStart);
+                        function onTouchStart(event) {
+                            $scope.$event = event;
+                            $scope.$$firstTarget = event.target;
+                            event.preventDefault();
+                            $element.bind("touchmove", onTouchMove);
+                            $element.bind("touchend", onTouchEnd);
+                        }
+                        function onTouchMove(event) {
+                            $scope.$$lastTarget = document.elementFromPoint(event.touches[0].pageX, event.touches[0].pageY);
+                            $scope.$event = event;
+                            var method = $element.attr("ng-touchmove");
+                            $scope.$apply(method);
+                        }
+                        function onTouchEnd(event) {
+                            $scope.$event = event;
+                            event.preventDefault();
+                            $element.unbind("touchmove", onTouchMove);
+                            $element.unbind("touchend", onTouchEnd);
+                        }
+
+                    }]
+                }
+            })
+            .directive("ngTouchend", function () {
+                return {
+                    controller: ["$scope", "$element", function ($scope, $element) {
+
+                        $element.bind("touchend", onTouchEnd);
+
+                        function onTouchEnd(event) {
+                            $scope.$event = event;
+                            if ($scope.$$firstTarget == $scope.$$lastTarget) {
+                                var method = $element.attr("ng-touchend");
+                                $scope.$apply(method);
+                            } else {
+                                var method = $element.attr("ng-touchend");
+                                if(method.indexOf('()')==-1){
+                                    method = method.replace(')', ',"different")')
+                                } else {
+                                    method = method.replace(')', '"different")')
+                                }   
+                                $scope.$apply(method);
+                            }
+                        }
+
+                    }]
+                }
+            })
+            .filter('time',function(){
+                return function(input){
+                    // var h = Math.floor(input/3600);
+                    
+                    var output;
+                    if(typeof input == 'string'){
+                        if(output.indexOf('NaN')){
+                            output = '00:00';
+                        }
+                    }
+                    if(angular.isNumber(input)){
+                        var m = Math.floor(input/60)%60;
+                        var s = Math.floor(input%60);
+                        if(m<10){
+                            m = '0'+m;
+                        }
+                        if(s<10){
+                            s = '0'+s;
+                        }
+                        output = m+':'+s;
+                        if(output.indexOf('NaN')!=-1){
+                            output = '00:00';
+                        }
+                    } else {
+                        output = '00:00';
+                    }
+                    return output;
+                }
+            })
+
+</script>
